@@ -21,12 +21,15 @@ import android.widget.Toast;
 
 public class Running extends Service {
     AudioRecord record;
+//    AudioRecord record1;
     AudioTrack track;
     Runnable thread;
 
     int SAMPLE_RATE = 8000;
     int BUF_SIZE = 1024;
     byte[] buffer = new byte[BUF_SIZE];
+   // byte[] buffer1 = new byte[BUF_SIZE];
+   // byte[] buffer2 = new byte[BUF_SIZE];
     int buffersize;
     int sessionid;
     Boolean state = true;
@@ -94,12 +97,14 @@ public class Recording extends AsyncTask {
             buffersize = BUF_SIZE;
         }
         try {
-            SharedPreferences finalmic = getSharedPreferences("main",MODE_PRIVATE);
             //MediaRecorder.AudioSource.CAMCORDER
             // MediaRecorder.AudioSource.MIC
-            record = new AudioRecord(finalmic.getInt("MIC",MediaRecorder.AudioSource.CAMCORDER),
+            record = new AudioRecord(MediaRecorder.AudioSource.CAMCORDER,
                     SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT, buffersize * 2);
+            /*record1 = new AudioRecord(MediaRecorder.AudioSource.MIC,
+                    SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT, buffersize * 2);*/
             sessionid=record.getAudioSessionId();
            // NoiseSuppressor.create(sessionid);
             track = new AudioTrack(AudioManager.STREAM_VOICE_CALL,
@@ -114,6 +119,7 @@ public class Recording extends AsyncTask {
         }
 
         record.startRecording();
+     //   record1.startRecording();
         track.play();
         try {
             thread = new Runnable() {
@@ -121,11 +127,18 @@ public class Recording extends AsyncTask {
                     while (state) {
                         if(!isCancelled()){
 
-                            track.setVolume(getSharedPreferences("volumes",MODE_PRIVATE).getFloat("speaker",0.5f));
                         record.read(buffer, 0, BUF_SIZE);
-                        track.write(buffer, 0, BUF_SIZE);}
+                            /*record1.read(buffer2,0,BUF_SIZE);
+                            for (int a=0;a<BUF_SIZE;a++){
+                                buffer[a]=(byte) (*//*buffer1[a]-*//*buffer2[a]);
+                            }*/
+                        track.write(buffer, 0, BUF_SIZE);
+                            }
                         else{
                             record.stop();
+                            record.release();
+                          /*  record1.stop();
+                            record1.release();*/
                             track.stop();
                             state = false;
                         }
