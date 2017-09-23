@@ -30,6 +30,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -47,6 +48,7 @@ Button startservice;
     AdLayout amazonad;
     AudioManager am;
     BroadcastReceiver rec;
+    ImageView spevol,micvol;
 
     @Override
     protected void onStart() {
@@ -78,6 +80,8 @@ Button startservice;
         AdRegistration.enableTesting(true);
         AdRegistration.enableLogging(true);
         startservice = (Button) findViewById(R.id.startservice);
+        spevol = (ImageView)findViewById(R.id.spevol);
+        micvol = (ImageView)findViewById(R.id.micvol);
         amazonad = (AdLayout) findViewById(R.id.adview);
         amazonad.setListener(new Adlisten());
         if(isMyServiceRunning(Running.class)){
@@ -88,8 +92,12 @@ Button startservice;
         seekbar1 = (SeekBar)findViewById(R.id.seekBar1);
         seekbar2 = (SeekBar)findViewById(R.id.seekBar2);
         am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
         seekbar2.setMax(am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL));
+        seekbar1.setMax(am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL));
+        seekbar1.setProgress(am.getStreamVolume(AudioManager.STREAM_VOICE_CALL)/2);
         seekbar2.setProgress(am.getStreamVolume(AudioManager.STREAM_VOICE_CALL));
+
         seekbar1.setTranslationX(-1*((getWindowManager().getDefaultDisplay().getWidth())/2));
         seekbar2.setTranslationX((getWindowManager().getDefaultDisplay().getWidth())/2);
         Animation seekbar1anim = AnimationUtils.loadAnimation(this,R.anim.initialbar);
@@ -97,21 +105,7 @@ Button startservice;
         Animation seekbar2anim = AnimationUtils.loadAnimation(this,R.anim.initialbar2);
         seekbar2.startAnimation(seekbar2anim);
         SharedPreferences mic=getSharedPreferences("main",MODE_PRIVATE);
-        final int micint = mic.getInt("MIC",MediaRecorder.AudioSource.CAMCORDER);
-if(NoiseSuppressor.isAvailable()){
-    Toast.makeText(this, "yesavailable", Toast.LENGTH_SHORT).show();
-}
-else{
-    Toast.makeText(this, "notavailable", Toast.LENGTH_SHORT).show();
-}
 
-
-        if(isMyServiceRunning(Running.class)){
-            Toast.makeText(this, "yesrunning", Toast.LENGTH_SHORT).show();
-        }
-        else{
-            Toast.makeText(this, "notrunning", Toast.LENGTH_SHORT).show();
-        }
         startservice.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {String action ;
@@ -127,9 +121,22 @@ else{
 
             }
         });
+        seekbar1.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Toast.makeText(Main2Activity.this, "This feature is under development", Toast.LENGTH_SHORT).show();
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
  seekbar2.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
      @Override
      public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if(progress==0){
+            spevol.setImageResource(R.drawable.ic_volume_off);
+        }
          am.setStreamVolume(AudioManager.STREAM_VOICE_CALL,progress,0);
      }
      @Override
@@ -142,7 +149,7 @@ else{
             @Override
             public void onReceive(Context context, Intent intent) {
                 startservice.setText("Start");
-                Toast.makeText(context, "stopped", Toast.LENGTH_SHORT).show();
+
             }
         };
 

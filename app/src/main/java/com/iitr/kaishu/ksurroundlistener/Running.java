@@ -24,9 +24,10 @@ public class Running extends Service {
 //    AudioRecord record1;
     AudioTrack track;
     Runnable thread;
+    AudioManager seram;
 
     int SAMPLE_RATE = 8000;
-    int BUF_SIZE = 1024;
+    int BUF_SIZE = 500;
     byte[] buffer = new byte[BUF_SIZE];
    // byte[] buffer1 = new byte[BUF_SIZE];
    // byte[] buffer2 = new byte[BUF_SIZE];
@@ -56,7 +57,7 @@ public class Running extends Service {
                 .setSmallIcon(R.drawable.blackear)
                 .setContentIntent(pi)
                 .setAutoCancel(true);
-
+        seram = (AudioManager) getSystemService(AUDIO_SERVICE);
         if(Build.VERSION.SDK_INT > 21){nnb.setColor(getResources().getColor(R.color.colorPrimaryDark));}
         Notification nn = nnb.build();
         startForeground(50,nn);
@@ -65,12 +66,9 @@ public class Running extends Service {
             Intent toactivity = new Intent("runningstat");
             sendBroadcast(toactivity);
             stopSelf();
-            Toast.makeText(this, intent.getAction(), Toast.LENGTH_SHORT).show();
             return START_REDELIVER_INTENT;
         }
         else{
-        Toast.makeText(this, "jniuhnuiui", Toast.LENGTH_SHORT).show();
-
         task.execute();}
 
     return START_STICKY;
@@ -78,7 +76,7 @@ public class Running extends Service {
 
 
 public class Recording extends AsyncTask {
-
+Boolean headphones = true;
 
     @Override
     protected Object doInBackground(Object[] params) {
@@ -126,21 +124,31 @@ public class Recording extends AsyncTask {
                 public void run() {
                     while (state) {
                         if(!isCancelled()){
-
+                            if(seram.isWiredHeadsetOn()){
                         record.read(buffer, 0, BUF_SIZE);
+
                             /*record1.read(buffer2,0,BUF_SIZE);
                             for (int a=0;a<BUF_SIZE;a++){
                                 buffer[a]=(byte) (*//*buffer1[a]-*//*buffer2[a]);
                             }*/
-                        track.write(buffer, 0, BUF_SIZE);
+                        track.write(buffer, 0, BUF_SIZE);}
+                            else {headphones=false;
+                                Intent toactivity = new Intent("runningstat");
+                                sendBroadcast(toactivity);
+                                state=false;}
+
                             }
                         else{
+
+
                             record.stop();
                             record.release();
                           /*  record1.stop();
                             record1.release();*/
                             track.stop();
                             state = false;
+
+
                         }
                     }
                 }
@@ -157,8 +165,24 @@ public class Recording extends AsyncTask {
         return null;
     }
 
+    @Override
+    protected void onPostExecute(Object o) {
+        super.onPostExecute(o);
+        if(!headphones){
+            Toast.makeText(Running.this, "Headphones ??", Toast.LENGTH_SHORT).show();
+        }
+        stopSelf();
 
+    }
 
+    @Override
+    protected void onCancelled() {
+        super.onCancelled();
+      try{  record.stop();
+        record.release();
+        track.stop();}
+      catch (Exception e){}
+    }
 }
 
 }
